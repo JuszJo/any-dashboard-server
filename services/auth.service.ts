@@ -5,6 +5,7 @@ import { handleJWTSign, handleJWTBearer, handleJWTCookie } from "../middleware/a
 import { VerifiedPayload } from "../types/types";
 import { LoginCredentials } from "../validators/login.validator";
 import UserModel from "../models/user.model";
+import { SignupCredentials } from "../validators/signup.validator";
 
 export async function comparePassword(password: string, storedPassword: string) {
     try {
@@ -21,7 +22,7 @@ export async function hashPassword(password: string) {
 
     try {
         const salt = await bcrypt.genSalt(saltRounds);
-    
+
         const hashedPassword = await bcrypt.hash(password, salt);
 
         return hashedPassword
@@ -53,25 +54,46 @@ export function handleLoginTokens(req: Request, res: Response, payload: Verified
 
 export async function checkUser(data: LoginCredentials) {
     try {
-        const user = await UserModel.findOne({username: data.username});
+        const user = await UserModel.findOne({ username: data.username });
 
-        if(user == null || !user) {
+        if (user == null || !user) {
             return null;
         }
 
         const isValid = await comparePassword(data.password, user.password);
 
-        if(!isValid) {
+        if (!isValid) {
             return null;
         }
 
-        const {password, __v, _id, ...rest} = user.toObject()
+        const { password, __v, _id, ...rest } = user.toObject()
 
         const id = _id.toString();
 
-        const payload: VerifiedPayload = {id, ...rest}
+        const payload: VerifiedPayload = { id, ...rest };
 
-        return payload
+        return payload;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+
+export async function saveUser(data: SignupCredentials) {
+    try {
+        const hashedPassword = await hashPassword(data.password);
+
+        const user = new UserModel({...data, password: hashedPassword, role: "user"});
+
+        await user.save();
+
+        const { password, __v, _id, ...rest } = user.toObject();
+
+        const id = _id.toString();
+
+        const payload: VerifiedPayload = { id, ...rest };
+
+        return payload;
     }
     catch (error) {
         throw error;

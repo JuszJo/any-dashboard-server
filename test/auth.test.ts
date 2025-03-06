@@ -84,20 +84,20 @@ describe("Auth API", () => {
         expect(res.text).toBe(JSON.stringify({ messsage: "invalid refresh token, unauthorized" }));
     });
 
-    // it("should login successfully setting auth and cookies", async () => {
-    //     const res = await request(app)
-    //     .post("/api/login")
-    //     .send({
-    //         username: "joshua",
-    //         password: "123456",
-    //     })
+    it("should login successfully setting auth and cookies", async () => {
+        const res = await request(app)
+        .post("/api/login")
+        .send({
+            username: "joshua",
+            password: "123456",
+        })
 
-    //     const body = res.body as {message: string, token: string};
+        const body = res.body as {message: string, token: string};
 
-    //     expect(res.status).toBe(200);
-    //     expect(res.headers["set-cookie"]).toBeDefined();
-    //     expect(body.token).toBeDefined();
-    // });
+        expect(res.status).toBe(200);
+        expect(res.headers["set-cookie"]).toBeDefined();
+        expect(body.token).toBeDefined();
+    });
     
     it("should deny login due to validation error", async () => {
         const res = await request(app)
@@ -120,12 +120,62 @@ describe("Auth API", () => {
         .post("/api/login")
         .send({
             username: "joshua",
-            password: "123456",
+            password: "12345678",
         })
 
         const body = res.body as {message: string};
 
         expect(res.status).toBe(401);
         expect(body.message).toBe("unauthorized");
+    });
+
+    it("should deny signup due to email missing", async () => {
+        const res = await request(app)
+        .post("/api/signup")
+        .send({
+            username: "joshua",
+            password: "123456",
+        })
+
+        const body = res.body as {message: string};
+
+        console.log(body);
+
+        expect(res.status).toBe(400);
+        expect(body.message).toBe("validation error");
+    });
+
+    // it("should signup successfully", async () => {
+    //     const res = await request(app)
+    //     .post("/api/signup")
+    //     .send({
+    //         username: "king",
+    //         password: "123456",
+    //         email: "king@mail.com"
+    //     })
+
+    //     const body = res.body as {message: string, token: string};
+
+    //     expect(res.status).toBe(201);
+    //     expect(body.message).toBe("signup successful");
+    //     expect(res.headers["set-cookie"]).toBeDefined();
+    //     expect(body.token).toBeDefined();
+    // });
+
+    it("should deny signup (user exists)", async () => {
+        const res = await request(app)
+        .post("/api/signup")
+        .send({
+            username: "king",
+            password: "123456",
+            email: "king@mail.com"
+        })
+
+        const body = res.body as {message: string};
+
+        console.log(body);
+
+        expect(res.status).toBe(400);
+        expect(body.message).toBe("Duplicate Error");
     });
 });

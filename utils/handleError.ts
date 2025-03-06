@@ -14,8 +14,6 @@ export function handleError(res: Response, error: any) {
         res.status(400).json({message: "validation error",  ...errors});
     }
     else if(error.code == 11000) {
-        console.log("Duplicate Error", error.keyPattern);
-        
         const duplicateFields = Object.keys(error.keyPattern).reduce((prev, curr) => {
             return {...prev, [curr]: `Specified ${curr.split(".").join(" ")} already exists`}
         }, {})
