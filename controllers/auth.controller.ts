@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { handleError } from "../utils/handleError";
 import { LoginCredentials, LoginValidator } from "../validators/login.validator";
-import { handleLoginTokens } from "../services/auth.service";
+import { checkUser, handleLoginTokens } from "../services/auth.service";
 import { VerifiedPayload } from "../types/types";
 
 export async function handleLogin(req: Request, res: Response) {
@@ -10,13 +10,13 @@ export async function handleLogin(req: Request, res: Response) {
 
         const validated = LoginValidator.parse(loginCredentials);
 
-        const payload: VerifiedPayload = {
-            username: validated.username,
-            email: validated.password,
-            id: "123456",
-            uuid: "654321",
-            role: "user",
+        const response = await checkUser(validated);
+
+        if(!response) {
+            throw Error("error logging in");
         }
+
+        const payload = response;
 
         const accessToken = handleLoginTokens(req, res, payload);
 

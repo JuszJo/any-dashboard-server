@@ -1,5 +1,8 @@
 import express from "express";
 import useRoutes from "./routes/routes";
+import { db } from "./config/db.config";
+import mongoose from "mongoose";
+import { Server } from "http";
 
 const app = express();
 
@@ -8,33 +11,47 @@ app.use(express.urlencoded({extended: true}));
 
 useRoutes(app);
 
+const PORT = Number(process.env.PORT as string) || 3000;
+
 // Only start the server if this file is being run directly
 if (require.main === module) {
-    const PORT = Number(process.env.PORT as string) || 3000; // Note: changed | to ||
+    async function main() {
+        console.log("Starting mongo connection");
+        
+        await mongoose.connect(db);
 
-    app.listen(PORT, () => {
-        console.log(`Listening on http://localhost:${PORT}`);
-    });
+        while (mongoose.connection.readyState !== 1) {
+            console.log(`Current connection state: ${mongoose.connection.readyState}`);
 
-    // async function gracefulShutdown(server: http.Server<typeof http.IncomingMessage, typeof http.ServerResponse>) {
-    //     console.log('Received shutdown signal. Shutting down gracefully...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        
+        console.log("MongoDB connection fully established");
     
-    //     // Close the Express server
-    //     server.close(async () => {
-    //         console.log('Express server closed.');
+        const server = app.listen(PORT, () => {
+            console.log(`Listening on http://localhost:${PORT}`);
+        });
     
-    //         // Close the Mongoose connection
-    //         await mongoose.connection.close();
-    //         console.log('MongoDB connection closed.');
+        async function gracefulShutdown(server: Server) {
+            console.log('Received shutdown signal. Shutting down gracefully...');
+        
+            // Close the Express server
+            server.close(async () => {
+                console.log('Express server closed.');
+        
+                await mongoose.connection.close();
+                console.log('MongoDB connection closed.');
+        
+                process.exit(0);
+            });
+        };
     
-    //         // Exit the process
-    //         process.exit(0);
-    //     });
-    // };
+        // Listen for SIGTERM and SIGINT signals
+        process.on('SIGTERM', () => gracefulShutdown(server));
+        process.on('SIGINT', () => gracefulShutdown(server));
+    }
 
-    // // Listen for SIGTERM and SIGINT signals
-    // process.on('SIGTERM', () => gracefulShutdown(server));
-    // process.on('SIGINT', () => gracefulShutdown(server));
+    main();
 }
 
 export { app };

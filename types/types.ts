@@ -11,7 +11,7 @@ export interface UserSignupCredentials {
 export interface Payload {
     email?: string,
     username: string,
-    role: string,
+    role?: string,
     id: string,
     uuid: string,
     iat?: number,
@@ -21,7 +21,7 @@ export interface Payload {
 export interface VerifiedPayload {
     email?: string,
     username: string,
-    role: string,
+    role?: string | null | undefined,
     id: string,
     uuid: string,
 }
