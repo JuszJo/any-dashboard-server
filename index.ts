@@ -7,7 +7,7 @@ import { Server } from "http";
 const app = express();
 
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 
 useRoutes(app);
 
@@ -16,39 +16,44 @@ const PORT = Number(process.env.PORT as string) || 3000;
 // Only start the server if this file is being run directly
 if (require.main === module) {
     async function main() {
-        console.log("Starting mongo connection");
-        
-        await mongoose.connect(db);
-
-        while (mongoose.connection.readyState !== 1) {
-            console.log(`Current connection state: ${mongoose.connection.readyState}`);
-
-            await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-        
-        console.log("MongoDB connection fully established");
+        try {
+            console.log("Starting mongo connection");
     
-        const server = app.listen(PORT, () => {
-            console.log(`Listening on http://localhost:${PORT}`);
-        });
+            await mongoose.connect(db);
     
-        async function gracefulShutdown(server: Server) {
-            console.log('Received shutdown signal. Shutting down gracefully...');
-        
-            // Close the Express server
-            server.close(async () => {
-                console.log('Express server closed.');
-        
-                await mongoose.connection.close();
-                console.log('MongoDB connection closed.');
-        
-                process.exit(0);
+            // while (mongoose.connection.readyState !== 1) {
+            //     console.log(`Current connection state: ${mongoose.connection.readyState}`);
+    
+            //     await new Promise(resolve => setTimeout(resolve, 2000));
+            // }
+    
+            console.log("MongoDB connection fully established");
+    
+            const server = app.listen(PORT, () => {
+                console.log(`Listening on http://localhost:${PORT}`);
             });
-        };
     
-        // Listen for SIGTERM and SIGINT signals
-        process.on('SIGTERM', () => gracefulShutdown(server));
-        process.on('SIGINT', () => gracefulShutdown(server));
+            async function gracefulShutdown(server: Server) {
+                console.log('Received shutdown signal. Shutting down gracefully...');
+    
+                // Close the Express server
+                server.close(async () => {
+                    console.log('Express server closed.');
+    
+                    await mongoose.connection.close();
+                    console.log('MongoDB connection closed.');
+    
+                    process.exit(0);
+                });
+            };
+    
+            // Listen for SIGTERM and SIGINT signals
+            process.on('SIGTERM', () => gracefulShutdown(server));
+            process.on('SIGINT', () => gracefulShutdown(server));
+        }
+        catch (error) {
+            console.error(error);
+        }
     }
 
     main();
