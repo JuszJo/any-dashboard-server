@@ -9,7 +9,7 @@ import authRoute from "./auth.route";
 export default function useRoutes(app: Express) {
     app.use(cors({origin: "*"}));
     
-    app.use("/api/auth", authRoute);
+    app.use("/api", authRoute);
 
     app.use("/api", verifyTokenMiddleware);
 
