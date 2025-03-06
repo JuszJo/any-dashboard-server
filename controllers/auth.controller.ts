@@ -13,7 +13,9 @@ export async function handleLogin(req: Request, res: Response) {
         const response = await checkUser(validated);
 
         if(!response) {
-            throw Error("error logging in");
+            res.status(401).json({message: "unauthorized"});
+
+            return;
         }
 
         const payload = response;
@@ -29,9 +31,23 @@ export async function handleLogin(req: Request, res: Response) {
 
 export async function handleSignup(req: Request, res: Response) {
     try {
+        const loginCredentials = req.body as LoginCredentials;
 
+        const validated = LoginValidator.parse(loginCredentials);
+
+        const response = await checkUser(validated);
+
+        if(!response) {
+            throw Error("error logging in");
+        }
+
+        const payload = response;
+
+        const accessToken = handleLoginTokens(req, res, payload);
+
+        res.status(200).json({ message: "login successful", token: accessToken });
     }
     catch (error) {
-
+        handleError(res, error);
     }
 }
