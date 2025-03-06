@@ -1,11 +1,11 @@
 import express from "express";
 import { verifyTokenMiddleware } from "../middleware/auth.middleware";
-import { handleLogin, handleSignup } from "../controller/auth.controller";
+import { handleLogin, handleSignup } from "../controllers/auth.controller";
 
 const router = express.Router();
 
 router.get("/auth", verifyTokenMiddleware);
-router.get("/login", handleLogin);
-router.get("/signup", handleSignup);
+router.post("/login", handleLogin);
+router.post("/signup", handleSignup);
 
 export default router;

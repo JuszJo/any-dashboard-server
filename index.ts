@@ -3,6 +3,9 @@ import useRoutes from "./routes/routes";
 
 const app = express();
 
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+
 useRoutes(app);
 
 // Only start the server if this file is being run directly

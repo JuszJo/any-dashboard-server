@@ -44,7 +44,7 @@ function handleRefreshTokenError(res: Response, error: any) {
     }
 }
 
-function handleJWTVerify(token: string, secret: string) {
+export function handleJWTVerify(token: string, secret: string) {
     const { iat, exp, ...rest } = jwt.verify(token, secret) as Payload
 
     return rest as VerifiedPayload;
@@ -58,11 +58,11 @@ export function handleJWTSign(payload: VerifiedPayload, secret: string, expiresI
     return newToken;
 }
 
-function handleJWTCookie(tokenName: string, token: string, res: Response, options: CookieOptions) {
+export function handleJWTCookie(tokenName: string, token: string, res: Response, options: CookieOptions) {
     res.cookie(tokenName, token, options);
 }
 
-function handleJWTBearer(token: string, res: Response) {
+export function handleJWTBearer(token: string, res: Response) {
     res.setHeader("Authorization", `Bearer ${token}`);
 }
 
