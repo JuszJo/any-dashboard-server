@@ -62,6 +62,10 @@ function handleJWTCookie(tokenName: string, token: string, res: Response, option
     res.cookie(tokenName, token, options);
 }
 
+function handleJWTBearer(token: string, res: Response) {
+    res.setHeader("Authorization", `Bearer ${token}`);
+}
+
 // CONCRETE
 function handleUpdateTokens(req: Request, res: Response, refreshToken: string) {
     // Assert type of process.env.JWT_SECRET
@@ -74,10 +78,12 @@ function handleUpdateTokens(req: Request, res: Response, refreshToken: string) {
 
     const newRefreshToken = handleJWTSign(newPayload, refreshSecret, 60 * 60 * 24 * 7);
 
-    handleJWTCookie("token", newToken, res, {
+    handleJWTBearer(newToken, res)
+
+    /* handleJWTCookie("token", newToken, res, {
         maxAge: 60000 * 60 * 24,
         httpOnly: true
-    })
+    }) */
 
     handleJWTCookie("refreshToken", newRefreshToken, res, {
         maxAge: 60000 * 60 * 24 * 7,
@@ -92,7 +98,7 @@ export function verifyTokenMiddleware(req: Request, res: Response, next: NextFun
 
     const cookies = cookieHeader == undefined ? undefined : getCookies(cookieHeader);
 
-    const token = cookies?.token;
+    const token = extractToken(req.headers.authorization);
     const refreshToken = cookies?.refreshToken;
 
     if (!token && !refreshToken) {
@@ -154,7 +160,7 @@ export function verifyTokenMiddleware(req: Request, res: Response, next: NextFun
         console.log("NO ACCESS BUT REFRESH");
 
         try {
-            handleUpdateTokens(req, res, refreshToken);
+            handleUpdateTokens(req, res, refreshToken);            
 
             return next();
         }
