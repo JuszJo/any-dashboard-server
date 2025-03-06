@@ -1,9 +1,29 @@
 import request from "supertest";
+
+import dotenv from "dotenv";
+
+dotenv.config();
+
 import { app } from "..";
+import { handleJWTSign } from "../middleware/auth.middleware";
 
 describe("Welcome Message API", () => {
+    const payload = {
+        id: "123456",
+        role: "user",
+        username: "joshua",
+        email: "josh@mail.com"
+    };
+
+    const secret: string | undefined = process.env.JWT_SECRET as string;
+    const refreshSecret = process.env.REFRESH_SECRET as string;
+
+    const token = handleJWTSign(payload, secret, 60 * 60);
+
     it("should show a welcome message", async () => {
-        const res = await request(app).get("/api/welcome");
+        const res = await request(app)
+        .set("Authorization", `Bearer ${token}`)
+        .get("/api/welcome")
 
         expect(res.status).toBe(200);
         expect(res.text).toBe("welcome");
