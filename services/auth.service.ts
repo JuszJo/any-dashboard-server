@@ -83,7 +83,7 @@ export async function saveUser(data: SignupCredentials) {
     try {
         const hashedPassword = await hashPassword(data.password);
 
-        const user = new UserModel({...data, password: hashedPassword, role: "user"});
+        const user = new UserModel({ ...data, password: hashedPassword, role: "user" });
 
         await user.save();
 
@@ -94,6 +94,27 @@ export async function saveUser(data: SignupCredentials) {
         const payload: VerifiedPayload = { id, ...rest };
 
         return payload;
+    }
+    catch (error) {
+        throw error;
+    }
+}
+
+export async function saveUserProfile(userId: string, fullName: string) {
+    try {
+        const result = await UserModel.updateOne({_id: userId}, {
+            $set: {
+                fullName: fullName
+            }
+        })
+
+        if(result.modifiedCount < 1) {
+            console.log("nothing to modify");
+            
+            return false;
+        }
+
+        return true;
     }
     catch (error) {
         throw error;

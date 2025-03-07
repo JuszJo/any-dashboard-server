@@ -6,7 +6,7 @@ dotenv.config();
 
 import { app } from "..";
 import { handleJWTSign } from "../middleware/auth.middleware";
-import { createRefreshCookie, setAuthHeader } from "./test.utils";
+import { createRefreshCookie, setAuthHeader, withoutToken, withToken } from "./test.utils";
 import mongoose from "mongoose";
 import { db } from "../config/db.config";
 
@@ -177,5 +177,30 @@ describe("Auth API", () => {
 
         expect(res.status).toBe(400);
         expect(body.message).toBe("Duplicate Error");
+    });
+
+    it("should deny profile update (no token)", async () => {
+        const res = await request(app)
+        .post("/api/profile")
+        .send({
+            fullName: "Joshua Ubani-Wokoma"
+        })
+
+        withoutToken(res);
+    });
+
+    // it("should update profile successfully", async () => {
+    //     const res = await withToken("/api/profile", {fullName: "Joshua Ubani-Wokoma"});
+        
+    //     const body = res.body as {message: string};
+
+    //     expect(res.status).toBe(201);
+    //     expect(body.message).toBe("profile creation successful");
+    // });
+
+    it("should deny update profile (not modified)", async () => {
+        const res = await withToken("/api/profile", {fullName: "Joshua Ubani-Wokoma"}, app);
+        
+        expect(res.status).toBe(304);
     });
 });
