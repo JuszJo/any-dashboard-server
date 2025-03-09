@@ -94,6 +94,8 @@ describe("Auth API", () => {
 
         const body = res.body as {message: string, token: string};
 
+        console.log(res.headers);
+
         expect(res.status).toBe(200);
         expect(res.headers["set-cookie"]).toBeDefined();
         expect(body.token).toBeDefined();
