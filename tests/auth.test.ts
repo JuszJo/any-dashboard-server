@@ -6,7 +6,7 @@ dotenv.config();
 
 import { app } from "..";
 import { handleJWTSign } from "../middleware/auth.middleware";
-import { createRefreshCookie, setAuthHeader, withoutToken, withToken } from "./test.utils";
+import { createRefreshCookie, setAuthHeader, withoutToken, getWithToken, postWithToken } from "./test.utils";
 import mongoose from "mongoose";
 import { db } from "../config/db.config";
 
@@ -199,8 +199,24 @@ describe("Auth API", () => {
     // });
 
     it("should deny update profile (not modified)", async () => {
-        const res = await withToken("/api/profile", {fullName: "Joshua Ubani-Wokoma"}, app);
+        const res = await postWithToken("/api/profile", {fullName: "Joshua Ubani-Wokoma"}, app);
         
         expect(res.status).toBe(304);
+    });
+
+    it("should get profile successfully", async () => {
+        const res = await getWithToken("/api/profile", app);
+
+        const body = res.body as { message: string, data: any };
+
+        console.log(body.data);
+        
+        expect(res.status).toBe(200);
+    });
+
+    it("should return ok due to auth token present", async () => {
+        const res = await getWithToken("/api/auth", app);
+
+        expect(res.status).toBe(200);
     });
 });

@@ -3,6 +3,7 @@ import { handleError } from "../utils/handleError";
 import { LoginCredentials, LoginValidator } from "../validators/login.validator";
 import { checkUser, handleLoginTokens, saveUser, saveUserProfile } from "../services/auth.service";
 import { SignupCredentials, SignupValidator } from "../validators/signup.validator";
+import UserModel from "../models/user.model";
 
 export async function handleLogin(req: Request, res: Response) {
     try {
@@ -48,7 +49,7 @@ export async function handleSignup(req: Request, res: Response) {
     }
 }
 
-export async function handleProfile(req: Request, res: Response) {
+export async function handlePostProfile(req: Request, res: Response) {
     try {
         const profileCredentials = req.body as { fullName: string };
 
@@ -69,6 +70,27 @@ export async function handleProfile(req: Request, res: Response) {
         }
 
         res.status(201).json({ message: "profile creation successful" });
+    }
+    catch (error) {
+        handleError(res, error);
+    }
+}
+
+export async function handleGetProfile(req: Request, res: Response) {
+    try {
+        const profile = await UserModel.findById(req.user.id);
+
+        if (!profile) {
+            res.status(400).json({ message: "profile not found" });
+
+            return;
+        }
+
+        const {__v, password, ...rest} = profile.toObject();
+
+        const profileData = rest;
+
+        res.status(200).json({ message: "successful", data: profileData });
     }
     catch (error) {
         handleError(res, error);

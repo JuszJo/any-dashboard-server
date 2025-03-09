@@ -18,7 +18,7 @@ export function withoutToken(res: Response) {
     expect(body.message).toBe("unauthorized, no token");
 }
 
-export async function withToken(route: string, data: any, app: Application) {
+export async function postWithToken(route: string, data: any, app: Application) {
     const loginRes = await request(app)
     .post("/api/login")
     .send({
@@ -31,6 +31,23 @@ export async function withToken(route: string, data: any, app: Application) {
     const res = await request(app)
     .post(route)
     .send(data)
+    .set("Authorization", setAuthHeader(token))
+
+    return res;
+}
+
+export async function getWithToken(route: string, app: Application) {
+    const loginRes = await request(app)
+    .post("/api/login")
+    .send({
+        username: "joshua",
+        password: "123456"
+    })
+
+    const token = loginRes.body.token as string;
+
+    const res = await request(app)
+    .get(route)
     .set("Authorization", setAuthHeader(token))
 
     return res;

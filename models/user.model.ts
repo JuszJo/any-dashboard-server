@@ -23,6 +23,7 @@ const UserSchema = new Schema({
     },
     uuid: {
         type: String,
+        unique: true,
         default: uuidv4(),
     }
 }, {
