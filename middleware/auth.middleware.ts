@@ -103,7 +103,7 @@ export function verifyTokenMiddleware(req: Request, res: Response, next: NextFun
     if (!token) {
         console.log("NO ACCESS TOKEN");
 
-        handleNoTokens(res);
+        res.status(401).json({ message: "access token expired", error: "expired" })
 
         return;
     }
@@ -121,7 +121,7 @@ export function verifyTokenMiddleware(req: Request, res: Response, next: NextFun
             if (error instanceof jwt.TokenExpiredError) {
                 console.log("ACCESS EXPIRED");
 
-                res.status(401).json({ message: "access token expired", error: "expired" })
+                res.status(401).json({ message: "access token expired", error: "expired" });
             }
             else if (error instanceof jwt.JsonWebTokenError) {
                 res.status(401).json({ messsage: "invalid token, unauthorized" });

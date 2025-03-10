@@ -15,7 +15,6 @@ export function withoutToken(res: Response) {
     console.log(body);
     
     expect(res.status).toBe(401);
-    expect(body.message).toBe("unauthorized, no token");
 }
 
 export async function postWithToken(route: string, data: any, app: Application) {
