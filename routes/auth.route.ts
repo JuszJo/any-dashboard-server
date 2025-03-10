@@ -5,7 +5,7 @@ import { handleLogin, handlePostProfile, handleGetProfile, handleSignup, handleR
 const router = express.Router();
 
 router.get("/auth", verifyTokenMiddleware, (req: Request, res: Response) => { res.status(200).json({ message: "authenticated" }) });
-router.get("/auth/refresh", handleRefresh);
+router.post("/auth/refresh", handleRefresh);
 router.post("/login", handleLogin);
 router.post("/signup", handleSignup);
 router.post("/profile", verifyTokenMiddleware, handlePostProfile);

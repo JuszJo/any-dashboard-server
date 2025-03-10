@@ -54,7 +54,7 @@ describe("Auth API", () => {
         expect(res.status).toBe(401);
         
         const res2 = await request(app)
-        .get("/api/auth/refresh")
+        .post("/api/auth/refresh")
         .send({token: refreshToken})
 
         const body = res2.body as { accessToken: string, refreshToken: string };
@@ -79,7 +79,7 @@ describe("Auth API", () => {
         expect(res.status).toBe(401);
 
         const res2 = await request(app)
-        .get("/api/auth/refresh")
+        .post("/api/auth/refresh")
         .send({token: refreshToken2})
 
         const body = res2.body as {message: string};
@@ -99,7 +99,7 @@ describe("Auth API", () => {
         expect(res.status).toBe(401);
 
         const res2 = await request(app)
-        .get("/api/auth/refresh")
+        .post("/api/auth/refresh")
         .send({token: "invalid"})
 
         const body = res2.body as {message: string};
