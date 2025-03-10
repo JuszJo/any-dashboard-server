@@ -4,6 +4,45 @@ import { LoginCredentials, LoginValidator } from "../validators/login.validator"
 import { checkUser, handleLoginTokens, saveUser, saveUserProfile } from "../services/auth.service";
 import { SignupCredentials, SignupValidator } from "../validators/signup.validator";
 import UserModel from "../models/user.model";
+import { handleJWTSign, handleJWTVerify } from "../middleware/auth.middleware";
+import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+
+import dotenv from "dotenv";
+
+dotenv.config();
+
+export async function handleRefresh(req: Request, res: Response) {
+    try {
+        if (!req.body.token) {
+            res.status(403).json({ message: "no refresh token" });
+
+            return;
+        }
+
+        const secret = process.env.JWT_SECRET as string;
+        const refreshSecret = process.env.REFRESH_SECRET as string;
+        const refreshToken = req.body.token as string;
+
+        const newPayload = handleJWTVerify(refreshToken, refreshSecret);
+
+        const newToken = handleJWTSign(newPayload, secret, 60 * 60 * 24);
+
+        const newRefreshToken = handleJWTSign(newPayload, refreshSecret, 60 * 60 * 24 * 7);
+
+        res.status(201).json({ message: "tokens generated successfully", accessToken: newToken, refreshToken: newRefreshToken })
+    }
+    catch (error) {
+        if (error instanceof JsonWebTokenError) {
+            res.status(401).json({ messsage: "invalid token, unauthorized" });
+        }
+        else if (error instanceof TokenExpiredError) {
+            res.status(401).json({ message: "refresh token expired" });
+        }
+        else {
+            handleError(res, error);
+        }
+    }
+}
 
 export async function handleLogin(req: Request, res: Response) {
     try {
@@ -21,9 +60,9 @@ export async function handleLogin(req: Request, res: Response) {
 
         const payload = response;
 
-        const accessToken = handleLoginTokens(req, res, payload);
+        const { accessToken, refreshToken } = handleLoginTokens(req, res, payload);
 
-        res.status(200).json({ message: "login successful", token: accessToken });
+        res.status(200).json({ message: "login successful", accessToken, refreshToken });
     }
     catch (error) {
         handleError(res, error);
@@ -40,9 +79,9 @@ export async function handleSignup(req: Request, res: Response) {
 
         const payload = response;
 
-        const accessToken = handleLoginTokens(req, res, payload);
+        const { accessToken, refreshToken } = handleLoginTokens(req, res, payload);
 
-        res.status(201).json({ message: "signup successful", token: accessToken });
+        res.status(201).json({ message: "signup successful", accessToken, refreshToken });
     }
     catch (error) {
         handleError(res, error);
@@ -86,7 +125,7 @@ export async function handleGetProfile(req: Request, res: Response) {
             return;
         }
 
-        const {__v, password, ...rest} = profile.toObject();
+        const { __v, password, ...rest } = profile.toObject();
 
         const profileData = rest;
 

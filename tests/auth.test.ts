@@ -46,15 +46,24 @@ describe("Auth API", () => {
         expect(res.status).toBe(401);
     });
 
-    it("should deny access (no token) but use refresh", async () => {
+    it("should deny access (invalid) but use refresh", async () => {
         const res = await request(app)
         .get("/api/welcome")
-        .set("Authorization", setAuthHeader(""))
-        .set("Cookie", refreshCookie)
+        .set("Authorization", setAuthHeader("invalid"))
 
-        expect(res.status).toBe(200);
-        expect(res.headers["authorization"]).toBeDefined();
-        expect(res.headers["authorization"]).toContain("Bearer ");
+        expect(res.status).toBe(401);
+        
+        const res2 = await request(app)
+        .get("/api/auth/refresh")
+        .send({token: refreshToken})
+
+        const body = res2.body as { accessToken: string, refreshToken: string };
+
+        console.log(body);
+
+        expect(res2.status).toBe(201);
+        expect(body.accessToken).toBeDefined();
+        expect(body.refreshToken).toBeDefined();
     });
 
     const refreshToken2 = handleJWTSign(payload, refreshSecret, 1);
@@ -66,10 +75,18 @@ describe("Auth API", () => {
         const res = await request(app)
         .get("/api/welcome")
         .set("Authorization", setAuthHeader(""))
-        .set("Cookie", refreshCookie2)
 
         expect(res.status).toBe(401);
-        expect(res.text).toBe(JSON.stringify({ message: "tokens expired" }));
+
+        const res2 = await request(app)
+        .get("/api/auth/refresh")
+        .send({token: refreshToken2})
+
+        const body = res2.body as {message: string};
+
+        console.log(body.message);
+
+        expect(res2.status).toBe(401);
     });
 
     const refreshCookie3 = createRefreshCookie("dss");
@@ -78,13 +95,21 @@ describe("Auth API", () => {
         const res = await request(app)
         .get("/api/welcome")
         .set("Authorization", setAuthHeader(""))
-        .set("Cookie", refreshCookie3)
 
         expect(res.status).toBe(401);
-        expect(res.text).toBe(JSON.stringify({ messsage: "invalid refresh token, unauthorized" }));
+
+        const res2 = await request(app)
+        .get("/api/auth/refresh")
+        .send({token: "invalid"})
+
+        const body = res2.body as {message: string};
+
+        console.log(body.message);
+
+        expect(res2.status).toBe(401);
     });
 
-    it("should login successfully setting auth and cookies", async () => {
+    it("should login successfully setting auth", async () => {
         const res = await request(app)
         .post("/api/login")
         .send({
@@ -92,13 +117,13 @@ describe("Auth API", () => {
             password: "123456",
         })
 
-        const body = res.body as {message: string, token: string};
+        const body = res.body as {message: string, accessToken: string, refreshToken: string};
 
-        console.log(res.headers);
-
+        console.log(body);
+        
         expect(res.status).toBe(200);
-        expect(res.headers["set-cookie"]).toBeDefined();
-        expect(body.token).toBeDefined();
+        expect(body.accessToken).toBeDefined();
+        expect(body.refreshToken).toBeDefined();
     });
     
     it("should deny login due to validation error", async () => {
@@ -156,12 +181,12 @@ describe("Auth API", () => {
     //         email: "king@mail.com"
     //     })
 
-    //     const body = res.body as {message: string, token: string};
+    //     const body = res.body as {message: string, accessToken: string, refreshToken: string};
 
     //     expect(res.status).toBe(201);
     //     expect(body.message).toBe("signup successful");
-    //     expect(res.headers["set-cookie"]).toBeDefined();
-    //     expect(body.token).toBeDefined();
+    //     expect(body.accessToken).toBeDefined();
+    //     expect(body.refreshToken).toBeDefined();
     // });
 
     it("should deny signup (user exists)", async () => {

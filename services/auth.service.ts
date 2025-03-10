@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 
-import { handleJWTSign, handleJWTBearer, handleJWTCookie } from "../middleware/auth.middleware";
+import { handleJWTSign, handleJWTBearer, handleJWTCookie, handleJWTRefresh } from "../middleware/auth.middleware";
 import { VerifiedPayload } from "../types/types";
 import { LoginCredentials } from "../validators/login.validator";
 import UserModel from "../models/user.model";
@@ -42,14 +42,11 @@ export function handleLoginTokens(req: Request, res: Response, payload: Verified
 
     handleJWTBearer(accessToken, res);
 
-    handleJWTCookie("refreshToken", refreshToken, res, {
-        maxAge: 60000 * 60 * 24 * 7,
-        httpOnly: true
-    })
+    handleJWTRefresh(refreshToken, res);
 
     req.user = payload;
 
-    return accessToken;
+    return { accessToken, refreshToken };
 }
 
 export async function checkUser(data: LoginCredentials) {
@@ -102,15 +99,15 @@ export async function saveUser(data: SignupCredentials) {
 
 export async function saveUserProfile(userId: string, fullName: string) {
     try {
-        const result = await UserModel.updateOne({_id: userId}, {
+        const result = await UserModel.updateOne({ _id: userId }, {
             $set: {
                 fullName: fullName
             }
         })
 
-        if(result.modifiedCount < 1) {
+        if (result.modifiedCount < 1) {
             console.log("nothing to modify");
-            
+
             return false;
         }
 

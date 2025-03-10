@@ -66,6 +66,10 @@ export function handleJWTBearer(token: string, res: Response) {
     res.setHeader("Authorization", `Bearer ${token}`);
 }
 
+export function handleJWTRefresh(token: string, res: Response) {
+    res.setHeader("Refresh", `Bearer ${token}`);
+}
+
 // CONCRETE
 function handleUpdateTokens(req: Request, res: Response, refreshToken: string) {
     // Assert type of process.env.JWT_SECRET
@@ -94,15 +98,10 @@ function handleUpdateTokens(req: Request, res: Response, refreshToken: string) {
 }
 
 export function verifyTokenMiddleware(req: Request, res: Response, next: NextFunction) {
-    const cookieHeader = req.headers.cookie;
-
-    const cookies = cookieHeader == undefined ? undefined : getCookies(cookieHeader);
-
     const token = extractToken(req.headers.authorization);
-    const refreshToken = cookies?.refreshToken;
 
-    if (!token && !refreshToken) {
-        console.log("NO ACCESS & REFRESH");
+    if (!token) {
+        console.log("NO ACCESS TOKEN");
 
         handleNoTokens(res);
 
@@ -120,54 +119,18 @@ export function verifyTokenMiddleware(req: Request, res: Response, next: NextFun
         }
         catch (error) {
             if (error instanceof jwt.TokenExpiredError) {
-                console.log("ACCESS EXPIRED, CHEKING REFRESH");
+                console.log("ACCESS EXPIRED");
 
-                if (!refreshToken) {
-                    console.log("ACCESS EXPIRED, NO REFRESH");
-
-                    handleNoRefresh(res);
-
-                    return;
-                }
-
-                try {
-                    handleUpdateTokens(req, res, refreshToken);
-
-                    return next();
-                }
-                catch (error) {
-                    handleRefreshTokenError(res, error);
-
-                    return;
-                }
+                res.status(401).json({ message: "access token expired", error: "expired" })
             }
             else if (error instanceof jwt.JsonWebTokenError) {
                 res.status(401).json({ messsage: "invalid token, unauthorized" });
-
-                return;
             }
             else {
                 console.log(error);
 
                 res.status(500).json({ message: "error" });
-
-                return;
             }
-        }
-    }
-
-    if (refreshToken) {
-        console.log("NO ACCESS BUT REFRESH");
-
-        try {
-            handleUpdateTokens(req, res, refreshToken);            
-
-            return next();
-        }
-        catch (error) {
-            handleRefreshTokenError(res, error);
-
-            return;
         }
     }
 }

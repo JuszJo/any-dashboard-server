@@ -26,12 +26,12 @@ export async function postWithToken(route: string, data: any, app: Application) 
         password: "123456"
     })
 
-    const token = loginRes.body.token as string;
+    const accessToken = loginRes.body.accessToken as string;
 
     const res = await request(app)
     .post(route)
     .send(data)
-    .set("Authorization", setAuthHeader(token))
+    .set("Authorization", setAuthHeader(accessToken))
 
     return res;
 }
@@ -44,11 +44,11 @@ export async function getWithToken(route: string, app: Application) {
         password: "123456"
     })
 
-    const token = loginRes.body.token as string;
+    const accessToken = loginRes.body.accessToken as string;
 
     const res = await request(app)
     .get(route)
-    .set("Authorization", setAuthHeader(token))
+    .set("Authorization", setAuthHeader(accessToken))
 
     return res;
 }
