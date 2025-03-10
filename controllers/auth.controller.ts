@@ -13,7 +13,7 @@ dotenv.config();
 
 export async function handleRefresh(req: Request, res: Response) {
     try {
-        if (!req.body.token) {
+        if (!req.body.refreshToken) {
             res.status(403).json({ message: "no refresh token" });
 
             return;
@@ -21,7 +21,7 @@ export async function handleRefresh(req: Request, res: Response) {
 
         const secret = process.env.JWT_SECRET as string;
         const refreshSecret = process.env.REFRESH_SECRET as string;
-        const refreshToken = req.body.token as string;
+        const refreshToken = req.body.refreshToken as string;
 
         const newPayload = handleJWTVerify(refreshToken, refreshSecret);
 

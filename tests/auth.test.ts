@@ -55,7 +55,7 @@ describe("Auth API", () => {
         
         const res2 = await request(app)
         .post("/api/auth/refresh")
-        .send({token: refreshToken})
+        .send({refreshToken})
 
         const body = res2.body as { accessToken: string, refreshToken: string };
 
@@ -80,7 +80,7 @@ describe("Auth API", () => {
 
         const res2 = await request(app)
         .post("/api/auth/refresh")
-        .send({token: refreshToken2})
+        .send({refreshToken: refreshToken2})
 
         const body = res2.body as {message: string};
 
@@ -100,7 +100,7 @@ describe("Auth API", () => {
 
         const res2 = await request(app)
         .post("/api/auth/refresh")
-        .send({token: "invalid"})
+        .send({refreshToken: "invalid"})
 
         const body = res2.body as {message: string};
 
